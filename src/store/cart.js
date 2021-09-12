@@ -1,18 +1,18 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { uiActions } from './ui';
-
 
 const cartSlice = createSlice({
     name: 'cart',
     initialState: {
         items: [],
-        totalQuantity: 0
+        totalQuantity: 0,
+        changed: false
     },
     reducers: {
         addToCart(state, action) {
             const itemToAdd = action.payload;
             const existingItem = state.items.find(item => item.id === itemToAdd.id);
             state.totalQuantity++;
+            state.changed = true;
             if(existingItem) {
                 existingItem.quantity++;
                 existingItem.totalPrice += existingItem.price;
@@ -26,12 +26,17 @@ const cartSlice = createSlice({
                 });
             }
         },
+        replaceCart(state, action) {
+            state.totalQuantity = action.payload.totalQuantity;
+            state.items = action.payload.items;
+        },
         removeFromCart(state, action) {
             const itemToRemoveId = action.payload;
             state.totalQuantity--;
+            state.changed = true;
             const existingItem = state.items.find(item => item.id === itemToRemoveId);
             if(existingItem.quantity === 1) {
-                state.items = state.items.filter(item => item.id === itemToRemoveId)
+                state.items = state.items.filter(item => item.id !== itemToRemoveId)
             } else {
                 existingItem.quantity--;
                 existingItem.totalPrice -= existingItem.price;
@@ -40,39 +45,5 @@ const cartSlice = createSlice({
     }
 });
 
-export const sendCartData = (cart) => {
-    return async (dispatch) => {
-        dispatch(uiActions.showNotification({
-            status: 'pending',
-            title: 'Sending...',
-            message: 'Sending cart data!'
-        }));
-        const sendRequest = async () => {
-            const resp = await fetch('https://react-test-68f18-default-rtdb.asia-southeast1.firebasedatabase.app/cart.json', {
-              method: 'PUT',
-              body: JSON.stringify(cart)
-            });
-            if(!resp.ok) {
-              throw new Error('Sending cart data failed');
-            }
-            // const data = await resp.json();
-        }
-        try{
-            await sendRequest();
-            dispatch(uiActions.showNotification({
-                status: 'success',
-                title: 'Success!',
-                message: 'Sent cart data successfully'
-            }))
-        } 
-        catch(error) {
-            dispatch(uiActions.showNotification({
-                status: 'error',
-                title: 'Error!',
-                message: 'Sending cart data failed'
-            }))
-        }
-    }
-}
 export const cartActions = cartSlice.actions;
 export default cartSlice.reducer

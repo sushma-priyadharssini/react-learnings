@@ -3,7 +3,7 @@ import Layout from './components/Layout/Layout';
 import Products from './components/Shop/Products';
 import { useSelector, useDispatch } from 'react-redux';
 import { Fragment, useEffect } from 'react';
-import { sendCartData } from './store/cart';
+import { sendCartData, fetchCartData } from './store/cartActions';
 import Notification from './components/UI/Notification';
 
 let isInitialLoad = true;
@@ -13,6 +13,10 @@ function App() {
   const showCart = useSelector(state => state.ui.showCart);
   const cart = useSelector(state => state.cart);
   const notification = useSelector(state => state.ui.notification);
+
+  useEffect(() => {
+    dispatch(fetchCartData());  
+  }, [dispatch])
 
   useEffect(() =>{
     // const sendRequest = async () => {
@@ -40,7 +44,9 @@ function App() {
       isInitialLoad = false;
       return;
     }
-    dispatch(sendCartData(cart));
+    if (cart.changed) {
+      dispatch(sendCartData(cart));
+    }
     // sendRequest().catch(error => {
     //   dispatch(uiActions.showNotification({
     //     status: 'error',
